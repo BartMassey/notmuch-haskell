@@ -25,6 +25,7 @@ parseAction = choice $ map try
   [ do expect "show"; return Show
   , do expect "set"; s <- get; return $ SetSeq s
   , do expect "add"; s <- get; return $ AddToSeq s
+  , do expect "del"; s <- get; return $ RemoveFromSeq s
   , return List
   ]
 
@@ -42,4 +43,4 @@ parseQuery = choice $ map try
   , do expect "any"; qs <- parseQueries; return $ Or qs
   ]
 
-parseQueries = many1 parseQuery
+parseQueries = many1 parseQuery <|> (do try $ expect "all"; return [])

@@ -66,6 +66,7 @@ data Action
   | Show
   | SetSeq String
   | AddToSeq String
+  | RemoveFromSeq String
   deriving (Show)
 
 runAction :: Action -> [Query] -> IO ()
@@ -77,12 +78,14 @@ runAction List qs = do
     let date = d_header "date"    "Unknown Date"    m
     let from = d_header "from"    "Unknown Sender"  m
     let subj = d_header "subject" "Unknown Subject" m
-    putStrLn $ "From " ++ from ++ " at " ++ date ++ " -- " ++ subj
+    let list = d_header "list-id" "Personal"        m
+    putStrLn $ list ++ " from " ++ from ++ " at " ++ date ++ " -- " ++ subj
 runAction Show qs = do
   ms <- runDatabase $ do
     fs <- runQuery qs
     old <- getSeq "seen"
     putSeq "seen" $ S.union old fs
+    putSeq "cur" fs
     forM (S.elems fs) $ getMsg
   forM_ ms $ \m -> do
     showMessageContent $ m_message_content m
@@ -93,6 +96,10 @@ runAction (AddToSeq s) qs = runDatabase $ do
   fs <- runQuery qs
   old <- getSeq s
   putSeq s $ S.union old fs
+runAction (RemoveFromSeq s) qs = runDatabase $ do
+  fs <- runQuery qs
+  old <- getSeq s
+  putSeq s $ S.difference old fs
 
 run :: String -> [String] -> String -> IO ()
 run cmd args send = do
