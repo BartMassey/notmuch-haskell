@@ -106,6 +106,7 @@ runAction Show qs = do
     forM (S.elems fs) $ getMsg
   forM_ (sortMessages ms) $ \m -> do
     listMessage m
+    getLine
     showMessageContent $ m_message_content m
 runAction (SetSeq s) qs = runDatabase $ do
   fs <- runQuery qs
