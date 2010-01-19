@@ -7,12 +7,19 @@ where
 import Codec.MIME.String
 import Control.Monad.State
 import Data.Char
+import Data.Function
+import Data.List
 import Data.Maybe
 import qualified Data.Set as S
+import Data.Time.Clock
+import Data.Time.LocalTime
+import Data.Time.Format
 import IO
 import System.FilePath
+import System.Locale
 import System.Posix.Files
 import System.Process
+import Text.Printf
 import Text.Regex.Posix
 
 import Database
@@ -20,8 +27,11 @@ import Database
 header :: String -> Message -> [String]
 header h = map (dropWhile (== ' ') . h_body) . filter ((== (map toLower h ++ ":")) . map toLower . h_raw_name) . mi_headers . m_message_info
 
-d_header :: String -> String -> Message -> String
-d_header h d = maybe d id . listToMaybe . header h
+m_header :: String -> Message -> Maybe String
+m_header h = listToMaybe . header h
+
+m_date :: Message -> Maybe UTCTime
+m_date m = (m_header "date" m >>= parseTime defaultTimeLocale "%a, %e %b %Y %H:%M:%S %z") `mplus` (m_header "date" m >>= parseTime defaultTimeLocale "%a, %e %b %Y %H:%M:%S %z (%Z)")
 
 data Query
   = InSeq String
@@ -69,17 +79,24 @@ data Action
   | RemoveFromSeq String
   deriving (Show)
 
+sortMessages :: [Message] -> [Message]
+sortMessages = sortBy (compare `on` m_date)
+
+listMessage :: Message -> IO ()
+listMessage m = do
+  tz <- getCurrentTimeZone
+  let date = maybe "                 " (formatTime defaultTimeLocale "%x %X %z" . utcToLocalTime tz) $ m_date m
+  let from = maybe "Unknown Sender" id $ m_header "from" m
+  let subj = maybe "Unknown Subject" id $ m_header "subject" m
+  let list = maybe "Personal" id $ m_header "list-id" m
+  printf "%16.16s %s %30.30s %s\n" list date from subj
+
 runAction :: Action -> [Query] -> IO ()
 runAction List qs = do
   ms <- runDatabase $ do
     fs <- runQuery qs
     forM (S.elems fs) $ getMsg
-  forM_ ms $ \m -> do
-    let date = d_header "date"    "Unknown Date"    m
-    let from = d_header "from"    "Unknown Sender"  m
-    let subj = d_header "subject" "Unknown Subject" m
-    let list = d_header "list-id" "Personal"        m
-    putStrLn $ list ++ " from " ++ from ++ " at " ++ date ++ " -- " ++ subj
+  forM_ (sortMessages ms) listMessage
 runAction Show qs = do
   ms <- runDatabase $ do
     fs <- runQuery qs
@@ -87,7 +104,8 @@ runAction Show qs = do
     putSeq "seen" $ S.union old fs
     putSeq "cur" fs
     forM (S.elems fs) $ getMsg
-  forM_ ms $ \m -> do
+  forM_ (sortMessages ms) $ \m -> do
+    listMessage m
     showMessageContent $ m_message_content m
 runAction (SetSeq s) qs = runDatabase $ do
   fs <- runQuery qs

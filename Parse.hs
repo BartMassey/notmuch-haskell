@@ -16,8 +16,15 @@ expect s = token id (const $ newPos "" 0 0) (\s' -> guard (s == s') >> return s'
 
 parseCmdLine :: Parsec [String] x (Action, [Query])
 parseCmdLine = do
-  a <- parseAction
-  q <- parseQueries <|> return [Not $ InSeq "seen"]
+  (a, q) <- (try $ do
+    a <- parseAction
+    q <- parseQueries <|> return [Not $ InSeq "seen"]
+    return (a, q)
+    ) <|> (try $ do
+    q <- parseQueries <|> return [Not $ InSeq "seen"]
+    a <- parseAction
+    return (a, q)
+    )
   eof
   return (a, q)
 
@@ -38,6 +45,7 @@ parseQuery = choice $ map try
   , do expect "subj"; s <- get; return $ WithHeader "subject" s
   , do expect "list"; s <- get; return $ WithHeader "list-id" s
   , do expect "header"; h <- get; v <- get; return $ WithHeader h v
+  , do expect "personal"; return $ Not $ WithHeader "list-id" ""
   , do expect "("; qs <- parseQueries; expect ")"; return $ And qs
   , do expect "not"; q <- parseQuery; return $ Not q
   , do expect "any"; qs <- parseQueries; return $ Or qs
