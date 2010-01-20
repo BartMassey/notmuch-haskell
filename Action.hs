@@ -85,7 +85,7 @@ sortMessages = sortBy (compare `on` m_date)
 listMessage :: Message -> IO ()
 listMessage m = do
   tz <- getCurrentTimeZone
-  let date = maybe "                 " (formatTime defaultTimeLocale "%x %X %z" . utcToLocalTime tz) $ m_date m
+  let date = maybe "                 " (formatTime defaultTimeLocale "%x %X" . utcToLocalTime tz) $ m_date m
   let from = maybe "Unknown Sender" id $ m_header "from" m
   let subj = maybe "Unknown Subject" id $ m_header "subject" m
   let list = maybe "Personal" id $ m_header "list-id" m
