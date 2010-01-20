@@ -95,14 +95,15 @@ runAction :: Action -> [Query] -> IO ()
 runAction List qs = do
   ms <- runDatabase $ do
     fs <- runQuery qs
+    putSeq "cur" fs
     forM (S.elems fs) $ getMsg
   forM_ (sortMessages ms) listMessage
 runAction Show qs = do
   ms <- runDatabase $ do
     fs <- runQuery qs
     old <- getSeq "seen"
-    putSeq "seen" $ S.union old fs
     putSeq "cur" fs
+    putSeq "seen" $ S.union old fs
     forM (S.elems fs) $ getMsg
   forM_ (sortMessages ms) $ \m -> do
     listMessage m
@@ -110,14 +111,17 @@ runAction Show qs = do
     showMessageContent $ m_message_content m
 runAction (SetSeq s) qs = runDatabase $ do
   fs <- runQuery qs
+  putSeq "cur" fs
   putSeq s fs
 runAction (AddToSeq s) qs = runDatabase $ do
   fs <- runQuery qs
   old <- getSeq s
+  putSeq "cur" fs
   putSeq s $ S.union old fs
 runAction (RemoveFromSeq s) qs = runDatabase $ do
   fs <- runQuery qs
   old <- getSeq s
+  putSeq "cur" fs
   putSeq s $ S.difference old fs
 
 run :: String -> [String] -> String -> IO ()
