@@ -16,7 +16,7 @@ expect s = token id (const $ newPos "" 0 0) (\s' -> guard (s == s') >> return s'
 
 parseCmdLine :: Parsec [String] x (Action, [Query])
 parseCmdLine = do
-  q <- parseQueries <|> parseNum <|> return [InSeq "cur"]
+  q <- parseQueries <|> try parseNum <|> return [InSeq "cur"]
   a <- parseAction
   eof
   return (a, q)
@@ -52,5 +52,6 @@ parseQueries = many1 parseQuery <|> (do try $ expect "all"; return [])
 parseNum = do
   n <- get
   case reads n of
-    []       -> mzero
-    (n, _):_ -> return [InSeq "cur", AtOffset $ n - 1]
+    []        -> mzero
+    (n, ""):_ -> return [InSeq "cur", AtOffset $ n - 1]
+    _         -> mzero
