@@ -8,6 +8,7 @@ import Codec.MIME.String
 import Control.Monad.State
 import Data.Char
 import Data.Function
+import Data.IORef
 import Data.List
 import Data.Maybe
 import qualified Data.Set as S
@@ -39,6 +40,7 @@ data Query
   | Not Query
   | Or [Query]
   | And [Query]
+  | AtOffset Int
   deriving (Show)
 
 type QueryM = StateT (S.Set FilePath) Database
@@ -65,6 +67,14 @@ buildQuery (Or qs) = do
   ms' <- forM qs $ \q -> lift $ execStateT (buildQuery q) ms
   put $ foldr S.union S.empty ms'
 buildQuery (And qs) = foldr (>>) (return ()) $ map buildQuery qs
+buildQuery (AtOffset n) = do
+  ms <- get
+  let ms' = S.toList ms
+  msgs <- forM ms' $ \m -> do msg <- lift $ getMsg m; return (m, msg)
+  let (_, search) = splitAt n $ sortBy (compare `on` m_date . snd) msgs
+  case search of
+    []      -> put S.empty
+    (m,_):_ -> put $ S.singleton m
 
 runQuery :: [Query] -> Database (S.Set FilePath)
 runQuery qs = do
@@ -82,14 +92,14 @@ data Action
 sortMessages :: [Message] -> [Message]
 sortMessages = sortBy (compare `on` m_date)
 
-listMessage :: Message -> IO ()
-listMessage m = do
+listMessage :: Int -> Message -> IO ()
+listMessage n m = do
   tz <- getCurrentTimeZone
   let date = maybe "                 " (formatTime defaultTimeLocale "%x %X" . utcToLocalTime tz) $ m_date m
   let from = maybe "Unknown Sender" id $ m_header "from" m
   let subj = maybe "Unknown Subject" id $ m_header "subject" m
   let list = maybe "Personal" id $ m_header "list-id" m
-  printf "%16.16s %s %30.30s %s\n" list date from subj
+  printf "%4i %16.16s %s %30.30s %s\n" n list date from subj
 
 runAction :: Action -> [Query] -> IO ()
 runAction List qs = do
@@ -97,7 +107,8 @@ runAction List qs = do
     fs <- runQuery qs
     putSeq "cur" fs
     forM (S.elems fs) $ getMsg
-  forM_ (sortMessages ms) listMessage
+  nR <- newIORef 1
+  forM_ (sortMessages ms) $ \m -> do n <- readIORef nR; listMessage n m; writeIORef nR $ n + 1
 runAction Show qs = do
   ms <- runDatabase $ do
     fs <- runQuery qs
@@ -105,8 +116,11 @@ runAction Show qs = do
     putSeq "cur" fs
     putSeq "seen" $ S.union old fs
     forM (S.elems fs) $ getMsg
+  nR <- newIORef 1
   forM_ (sortMessages ms) $ \m -> do
-    listMessage m
+    n <- readIORef nR
+    listMessage n m
+    writeIORef nR $ n + 1
     getLine
     showMessageContent $ m_message_content m
 runAction (SetSeq s) qs = runDatabase $ do
