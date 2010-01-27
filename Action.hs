@@ -32,7 +32,13 @@ m_header :: String -> Message -> Maybe String
 m_header h = listToMaybe . header h
 
 m_date :: Message -> Maybe UTCTime
-m_date m = (m_header "date" m >>= parseTime defaultTimeLocale "%a, %e %b %Y %H:%M:%S %z") `mplus` (m_header "date" m >>= parseTime defaultTimeLocale "%a, %e %b %Y %H:%M:%S %z (%Z)")
+m_date m =
+  (m_header "date" m >>= parseTime defaultTimeLocale "%a, %e %b %Y %H:%M:%S %z") `mplus`
+  (m_header "date" m >>= parseTime defaultTimeLocale "%a, %e %b %Y %H:%M:%S %z (%Z)") `mplus`
+  (m_header "date" m >>= parseTime defaultTimeLocale "%a, %e %b %Y %H:%M:%S %Z") `mplus`
+  (m_header "date" m >>= parseTime defaultTimeLocale "%e %b %Y %H:%M:%S %z") `mplus`
+  (m_header "date" m >>= parseTime defaultTimeLocale "%e %b %Y %H:%M:%S %z (%Z)") `mplus`
+  (m_header "date" m >>= parseTime defaultTimeLocale "%e %b %Y %H:%M:%S %Z")
 
 data Query
   = InSeq String
