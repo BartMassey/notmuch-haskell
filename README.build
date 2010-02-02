@@ -1,0 +1,18 @@
+You can build jmh using either the Makefile or the jmh.cabal
+provided.
+
+Here's the packages that currently need to be installed on
+my box to get jmh to build.
+
+  strict-0.3.2: hackage
+  mime-string-0.4: hackage
+  parsec-3.0.0: Debian unstable
+  time-1.1.2.4: Debian unstable
+  regex-posix-0.93.2: Debian unstable
+
+Note that if cabal is used it will complain about jmh
+depending on parsec-3 while network depends on parsec-2.
+This seems to be harmless.
+
+Bart Massey <bart@cs.pdx.edu>
+2010-02-02

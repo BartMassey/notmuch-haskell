@@ -15,7 +15,7 @@ import qualified Data.Set as S
 import Data.Time.Clock
 import Data.Time.LocalTime
 import Data.Time.Format
-import IO
+import System.IO
 import System.FilePath
 import System.Locale
 import System.Posix.Files

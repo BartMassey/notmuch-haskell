@@ -1,0 +1,28 @@
+Name:                jmh
+Synopsis:            Julian's MH-like email MUA
+Version:             0.1
+Cabal-Version:       >= 1.6
+Build-Type:          Simple
+License:             LGPL
+License-file:        COPYING
+Copyright:           © 2010 Julian Kongslie
+Author:              Julian Kongslie
+Maintainer:          Julian Kongslie <jblake@omgwallhack.org>
+Build-Depends:       base,
+                     containers,
+                     mtl,
+		     strict >= 0.3.2,
+		     mime-string >= 0.4,
+		     parsec >= 3.0.0,
+		     time >= 1.1.2.4,
+		     regex-posix >= 0.93.2,
+		     network >= 2.2.1.4,
+		     filepath >= 1.1.0.2,
+		     directory >= 1.0.0.3,
+		     process >= 1.0.1.1,
+		     unix >= 2.3.2.0,
+		     old-locale >= 1.0.0.1
+
+Executable:          jmh
+Main-is:             Main.hs
+GHC-Options:         -Wall
