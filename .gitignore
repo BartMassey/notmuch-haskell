@@ -2,3 +2,9 @@
 *.o
 /jmh
 /dist/
+/notmuch/NOTMUCH_H.hs
+/notmuch/NOTMUCH_H_hsc.c
+/notmuch/NOTMUCH_H_hsc.h
+/notmuch/NOTMUCH_H_stub.c
+/notmuch/NOTMUCH_H_stub.h
+/notmuch/notmuch.h
