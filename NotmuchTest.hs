@@ -13,7 +13,6 @@
 import Control.Monad
 import Data.Time
 import System.Environment
-import System.Locale
     
 import Foreign.Notmuch
 
