@@ -25,8 +25,6 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-#def void _dummy_force_NOTMUCH_H_hsc_c (void) { }
-
 {-# OPTIONS -XForeignFunctionInterface #-}
 
 #include "notmuch.h"
