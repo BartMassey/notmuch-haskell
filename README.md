@@ -1,15 +1,20 @@
 # notmuch-haskell
-Copyright © 2010 Bart Massey
+Copyright (c) 2010 Bart Massey
 
 This is a Haskell FFI binding to the
 [notmuch](http://notmuchmail.org) email client library.
-It's pretty slap-together and not well-maintained.  There's
-no Haddock, though there should be--use the `notmuch`
-docs. Patches welcome.
+It's pretty slap-together and not maintained: I'd call it
+obsolete.  There's no Haddock, though there should be--use
+the `notmuch` docs. Patches welcome.
 
-This binding is currently for `libnotmuch3` as exported by
-the Debian package `libnotmuch3=0.13.2-1`. Your mileage may
-vary.
+This binding was built for `libnotmuch3` as exported by
+the Debian package `libnotmuch3=0.13.2-1`. The oldest
+still-available version of `libnotmuch3` on Debian is
+`0.18.2-1`.
+
+There seem to be memory management problems currently that
+cause the test to crash. Debugging seems hard, and I don't
+use notmuch.
 
 XXX As of GHC 7.2, the compiler no longer checks that the
 API description in the hsc file matches that in `notmuch.h`,
